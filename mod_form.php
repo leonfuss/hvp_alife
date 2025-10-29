@@ -73,35 +73,65 @@ class mod_hvp_mod_form extends moodleform_mod {
         $mform->addElement('hidden', 'h5pmaxscore', '');
         $mform->setType('h5pmaxscore', PARAM_INT);
 
-        $core = \mod_hvp\framework::instance();
+	$core = \mod_hvp\framework::instance();
         $displayoptions = $core->getDisplayOptionsForEdit();
         if (isset($displayoptions[H5PCore::DISPLAY_OPTION_FRAME])) {
-            // Display options group.
-            $mform->addElement('header', 'displayoptions', get_string('displayoptions', 'hvp'));
+            // Check if user should see display options
+            global $USER;
+            $context = context_system::instance();
+            $showdisplayoptions = is_siteadmin();
+            
+            if (!$showdisplayoptions) {
+                $userroles = get_user_roles($context, $USER->id);
+                foreach ($userroles as $role) {
+                    if ($role->shortname === 'manager' || $role->shortname === 'coursecreator') {
+                        $showdisplayoptions = true;
+                        break;
+                    }
+                }
+            }
+            
+            if ($showdisplayoptions) {
+                // Managers/Admins can see and control display options
+                $mform->addElement('header', 'displayoptions', get_string('displayoptions', 'hvp'));
 
-            $mform->addElement('checkbox', H5PCore::DISPLAY_OPTION_FRAME, get_string('enableframe', 'hvp'));
-            $mform->setType(H5PCore::DISPLAY_OPTION_FRAME, PARAM_BOOL);
-            $mform->setDefault(H5PCore::DISPLAY_OPTION_FRAME, true);
+                $mform->addElement('checkbox', H5PCore::DISPLAY_OPTION_FRAME, get_string('enableframe', 'hvp'));
+                $mform->setType(H5PCore::DISPLAY_OPTION_FRAME, PARAM_BOOL);
+                $mform->setDefault(H5PCore::DISPLAY_OPTION_FRAME, false); // Changed default to FALSE
 
-            if (isset($displayoptions[H5PCore::DISPLAY_OPTION_DOWNLOAD])) {
-                $mform->addElement('checkbox', H5PCore::DISPLAY_OPTION_DOWNLOAD, get_string('enabledownload', 'hvp'));
+                if (isset($displayoptions[H5PCore::DISPLAY_OPTION_DOWNLOAD])) {
+                    $mform->addElement('checkbox', H5PCore::DISPLAY_OPTION_DOWNLOAD, get_string('enabledownload', 'hvp'));
+                    $mform->setType(H5PCore::DISPLAY_OPTION_DOWNLOAD, PARAM_BOOL);
+                    $mform->setDefault(H5PCore::DISPLAY_OPTION_DOWNLOAD, false); // Force FALSE
+                    $mform->disabledIf(H5PCore::DISPLAY_OPTION_DOWNLOAD, 'frame');
+                }
+
+                if (isset($displayoptions[H5PCore::DISPLAY_OPTION_EMBED])) {
+                    $mform->addElement('checkbox', H5PCore::DISPLAY_OPTION_EMBED, get_string('enableembed', 'hvp'));
+                    $mform->setType(H5PCore::DISPLAY_OPTION_EMBED, PARAM_BOOL);
+                    $mform->setDefault(H5PCore::DISPLAY_OPTION_EMBED, false); // Force FALSE
+                    $mform->disabledIf(H5PCore::DISPLAY_OPTION_EMBED, 'frame');
+                }
+
+                if (isset($displayoptions[H5PCore::DISPLAY_OPTION_COPYRIGHT])) {
+                    $mform->addElement('checkbox', H5PCore::DISPLAY_OPTION_COPYRIGHT, get_string('enablecopyright', 'hvp'));
+                    $mform->setType(H5PCore::DISPLAY_OPTION_COPYRIGHT, PARAM_BOOL);
+                    $mform->setDefault(H5PCore::DISPLAY_OPTION_COPYRIGHT, false); // Force FALSE
+                    $mform->disabledIf(H5PCore::DISPLAY_OPTION_COPYRIGHT, 'frame');
+                }
+            } else {
+                // Teachers: hide all options and force them to disabled
+                $mform->addElement('hidden', H5PCore::DISPLAY_OPTION_FRAME, 0);
+                $mform->setType(H5PCore::DISPLAY_OPTION_FRAME, PARAM_BOOL);
+                
+                $mform->addElement('hidden', H5PCore::DISPLAY_OPTION_DOWNLOAD, 0);
                 $mform->setType(H5PCore::DISPLAY_OPTION_DOWNLOAD, PARAM_BOOL);
-                $mform->setDefault(H5PCore::DISPLAY_OPTION_DOWNLOAD, $displayoptions[H5PCore::DISPLAY_OPTION_DOWNLOAD]);
-                $mform->disabledIf(H5PCore::DISPLAY_OPTION_DOWNLOAD, 'frame');
-            }
-
-            if (isset($displayoptions[H5PCore::DISPLAY_OPTION_EMBED])) {
-                $mform->addElement('checkbox', H5PCore::DISPLAY_OPTION_EMBED, get_string('enableembed', 'hvp'));
+                
+                $mform->addElement('hidden', H5PCore::DISPLAY_OPTION_EMBED, 0);
                 $mform->setType(H5PCore::DISPLAY_OPTION_EMBED, PARAM_BOOL);
-                $mform->setDefault(H5PCore::DISPLAY_OPTION_EMBED, $displayoptions[H5PCore::DISPLAY_OPTION_EMBED]);
-                $mform->disabledIf(H5PCore::DISPLAY_OPTION_EMBED, 'frame');
-            }
-
-            if (isset($displayoptions[H5PCore::DISPLAY_OPTION_COPYRIGHT])) {
-                $mform->addElement('checkbox', H5PCore::DISPLAY_OPTION_COPYRIGHT, get_string('enablecopyright', 'hvp'));
+                
+                $mform->addElement('hidden', H5PCore::DISPLAY_OPTION_COPYRIGHT, 0);
                 $mform->setType(H5PCore::DISPLAY_OPTION_COPYRIGHT, PARAM_BOOL);
-                $mform->setDefault(H5PCore::DISPLAY_OPTION_COPYRIGHT, $displayoptions[H5PCore::DISPLAY_OPTION_COPYRIGHT]);
-                $mform->disabledIf(H5PCore::DISPLAY_OPTION_COPYRIGHT, 'frame');
             }
         }
 
