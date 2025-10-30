@@ -84,7 +84,7 @@ class mod_hvp_mod_form extends moodleform_mod {
             if (!$showdisplayoptions) {
                 $userroles = get_user_roles($context, $USER->id);
                 foreach ($userroles as $role) {
-                    if ($role->shortname === 'manager' || $role->shortname === 'coursecreator') {
+                    if ($role->shortname === 'manager') {
                         $showdisplayoptions = true;
                         break;
                     }
